@@ -1,7 +1,7 @@
 import os
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
@@ -29,7 +29,11 @@ def generate_launch_description():
     # Instead, use launch substitutions properly
     configuration_basename_arg = DeclareLaunchArgument(
         'configuration_basename',
-        default_value='cartographer_sim.lua',
+        default_value=PythonExpression([
+            # note the outer quotes to make this a valid Python string:
+            "'cartographer_sim.lua' if '", use_sim_time,
+            "' == 'True' else 'cartographer_real.lua'"
+        ]),
         description='Name of lua file for cartographer'
     )
     

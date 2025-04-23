@@ -1,8 +1,9 @@
 import os
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
 
 
@@ -22,7 +23,11 @@ def generate_launch_description():
     map_file = LaunchConfiguration('map_file')
     
     # Determine the full path to the map file
-    map_file_path = os.path.join(pkg_share, 'config', map_file)
+    map_file_path = PathJoinSubstitution([
+        FindPackageShare('map_server'),
+        'config',
+        map_file
+    ])
     
     # Define the map_server node
     map_server_node = Node(
@@ -30,7 +35,10 @@ def generate_launch_description():
         executable='map_server',
         name='map_server',
         output='screen',
-        parameters=[{'yaml_filename': map_file_path}]
+        parameters=[
+            {'use_sim_time': True}, 
+            {'yaml_filename':map_file_path} 
+        ]
     )
     
     # Define the lifecycle_manager node
@@ -40,6 +48,7 @@ def generate_launch_description():
         name='lifecycle_manager_map',
         output='screen',
         parameters=[
+            {'use_sim_time': True},
             {'autostart': True},
             {'node_names': ['map_server']}
         ]
