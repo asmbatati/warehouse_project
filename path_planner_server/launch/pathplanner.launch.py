@@ -1,6 +1,6 @@
 import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable, LogInfo
+from launch.actions import DeclareLaunchArgument, LogInfo
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
@@ -37,7 +37,6 @@ def generate_launch_description():
     bt_navigator_params = os.path.join(path_planner_dir, 'config', 'bt_navigator_sim.yaml')
     planner_params = os.path.join(path_planner_dir, 'config', 'planner_sim.yaml')
     controller_params = os.path.join(path_planner_dir, 'config', 'controller_sim.yaml')
-    recoveries_params = os.path.join(path_planner_dir, 'config', 'recoveries_sim.yaml')
     
     # Select the correct command velocity topic for simulation or real robot
     cmd_vel_topic = 'cmd_vel'  # Default topic
@@ -68,11 +67,6 @@ def generate_launch_description():
     
     controller_configured_params = RewrittenYaml(
         source_file=controller_params,
-        param_rewrites=param_substitutions,
-        convert_types=True)
-    
-    recoveries_configured_params = RewrittenYaml(
-        source_file=recoveries_params,
         param_rewrites=param_substitutions,
         convert_types=True)
     
@@ -124,18 +118,6 @@ def generate_launch_description():
             ]))
         ])
     
-    recoveries_cmd = Node(
-        package='nav2_recoveries',
-        executable='recoveries_server',
-        name='recoveries_server',
-        output='screen',
-        parameters=[recoveries_configured_params],
-        remappings=[
-            ('cmd_vel', PythonExpression([
-                '"', cmd_vel_topic, '" + ("/diffbot_base_controller/cmd_vel_unstamped" if ', use_sim_time, ' == "True" else "/robot/cmd_vel")'
-            ]))
-        ])
-    
     lifecycle_cmd = Node(
         package='nav2_lifecycle_manager',
         executable='lifecycle_manager',
@@ -144,7 +126,7 @@ def generate_launch_description():
         parameters=[
             {'use_sim_time': use_sim_time},
             {'autostart': autostart},
-            {'node_names': ['planner_server', 'controller_server', 'recoveries_server', 'bt_navigator']}
+            {'node_names': ['planner_server', 'controller_server', 'bt_navigator']}
         ])
     
     # Create the launch description and populate
@@ -163,7 +145,6 @@ def generate_launch_description():
     ld.add_action(bt_navigator_cmd)
     ld.add_action(planner_cmd)
     ld.add_action(controller_cmd)
-    ld.add_action(recoveries_cmd)
     ld.add_action(lifecycle_cmd)
     
     return ld
