@@ -10,7 +10,6 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
     # Get the directory path for the package
     pkg_share = get_package_share_directory('localization_server')
-    map_server_share = get_package_share_directory('map_server')
     rviz_config_path = os.path.join(pkg_share, 'rviz', 'localization.rviz')
     
     # Declare launch arguments
@@ -91,5 +90,5 @@ def generate_launch_description():
         map_server_node,
         amcl_node,
         lifecycle_manager_node,
-        rviz_node
+        # rviz_node
     ])
