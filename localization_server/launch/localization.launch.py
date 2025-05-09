@@ -1,7 +1,7 @@
 import os
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
@@ -24,21 +24,32 @@ def generate_launch_description():
         default_value='True',
         description='Use simulation time'
     )
-    
+
+    localization_arg = DeclareLaunchArgument(
+        'localization',
+        default_value='amcl_config_sim.yaml',
+        description='Localization config file based on map'
+    )
+
     # Extract launch arguments
     map_file = LaunchConfiguration('map_file')
-    use_sim_time = LaunchConfiguration('use_sim_time')
-    
-    # Path to the AMCL configuration file
-    params_file = os.path.join(pkg_share, 'config', 'amcl_config_sim.yaml')
-    
-    # Use substitutions to properly handle the path joining
+    use_sim_time = LaunchConfiguration('use_sim_time')  
+    localization_file = PythonExpression([
+        "'amcl_config_sim.yaml' if 'warehouse_map_sim.yaml' in '", map_file, 
+        "' else 'amcl_config_real.yaml'"
+    ])    
     map_yaml_file = PathJoinSubstitution([
         FindPackageShare('map_server'),
         'config',
         map_file
     ])
-    
+
+    amcl_yaml_file = PathJoinSubstitution([
+        FindPackageShare('localization_server'),
+        'config',
+        localization_file
+    ])
+
     # Map Server Node
     map_server_node = Node(
         package='nav2_map_server',
@@ -57,7 +68,7 @@ def generate_launch_description():
         executable='amcl',
         name='amcl',
         output='screen',
-        parameters=[params_file]
+        parameters=[amcl_yaml_file]
     )
     
     # Lifecycle Manager Node
@@ -86,6 +97,7 @@ def generate_launch_description():
     # Create and return launch description
     return LaunchDescription([
         map_file_arg,
+        localization_arg,
         use_sim_time_arg,
         map_server_node,
         amcl_node,
