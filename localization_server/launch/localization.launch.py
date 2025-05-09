@@ -90,5 +90,5 @@ def generate_launch_description():
         map_server_node,
         amcl_node,
         lifecycle_manager_node,
-        # rviz_node
+        rviz_node
     ])

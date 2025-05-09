@@ -148,5 +148,5 @@ def generate_launch_description():
         recovery_node,
         bt_navigator_node,
         lifecycle_node,
-        # rviz_node
+        rviz_node
     ])
