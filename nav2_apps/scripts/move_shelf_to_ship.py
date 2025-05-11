@@ -6,7 +6,7 @@ from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Twist
 from nav2_msgs.srv import ManageLifecycleNodes
 from std_srvs.srv import SetBool
-from nav2_apps.srv import GoToLoading
+from attach_shelf.srv import GoToLoading
 import tf_transformations
 import math
 import time
