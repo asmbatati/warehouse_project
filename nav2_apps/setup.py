@@ -1,7 +1,6 @@
 from setuptools import find_packages, setup
 import os
 from glob import glob
-# from rosidl_python import generate_rosidl_types
 
 package_name = 'nav2_apps'
 
@@ -15,6 +14,8 @@ setup(
         ('share/' + package_name, ['package.xml']),
         # Include launch files
         # (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
+        # Include srv files
+        # (os.path.join('share', package_name, 'srv'), glob('srv/*.srv')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

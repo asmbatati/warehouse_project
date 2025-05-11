@@ -89,6 +89,9 @@ def generate_launch_description():
         recovery_yaml
     ])
 
+    filters_yaml = os.path.join(get_package_share_directory(
+            'path_planner_server'), 'config', 'filters.yaml')
+
     controller_node = Node(
         package='nav2_controller',
         executable='controller_server',
@@ -118,6 +121,23 @@ def generate_launch_description():
         output='screen',
         parameters=[bt_navigator_yaml_file])
 
+
+    filter_mask_server = Node(
+        package='nav2_map_server',
+        executable='map_server',
+        name='filter_mask_server',
+        output='screen',
+        emulate_tty=True,
+        parameters=[filters_yaml]),
+
+    costmap_filter_info_server = Node(
+        package='nav2_map_server',
+        executable='costmap_filter_info_server',
+        name='costmap_filter_info_server',
+        output='screen',
+        emulate_tty=True,
+        parameters=[filters_yaml]),
+
     lifecycle_node = Node(
         package='nav2_lifecycle_manager',
         executable='lifecycle_manager',
@@ -127,7 +147,9 @@ def generate_launch_description():
                     {'node_names': ['planner_server',
                                     'controller_server',
                                     'recoveries_server',
-                                    'bt_navigator']}])
+                                    'bt_navigator',
+                                    'filter_mask_server',
+                                    'costmap_filter_info_server']}])
     
     rviz_node = Node(
         package='rviz2',
