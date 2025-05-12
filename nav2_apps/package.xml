@@ -13,6 +13,7 @@
   <depend>nav2_msgs</depend>
   <depend>std_srvs</depend>
   <depend>tf_transformations</depend>
+  <!-- <depend>attach_shelf</depend> -->
 
 
   <test_depend>ament_copyright</test_depend>
