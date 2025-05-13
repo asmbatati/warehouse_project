@@ -1,12 +1,14 @@
 import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, GroupAction, RegisterEventHandler
+from launch.event_handlers import OnProcessExit
 from launch.substitutions import LaunchConfiguration, PythonExpression, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
+
     pkg_share = get_package_share_directory('path_planner_server')
     rviz_config_path = os.path.join(pkg_share, 'rviz', 'pathplanning.rviz')
     
@@ -70,7 +72,7 @@ def generate_launch_description():
         'config',
         controller_yaml
     ])
-    bt_navigator_yaml = LaunchConfiguration('controller_yaml')
+    bt_navigator_yaml = LaunchConfiguration('bt_navigator_yaml')
     bt_navigator_yaml_file = PathJoinSubstitution([
         pkg_share,
         'config',
@@ -92,64 +94,80 @@ def generate_launch_description():
     filters_yaml = os.path.join(get_package_share_directory(
             'path_planner_server'), 'config', 'filters.yaml')
 
-    controller_node = Node(
-        package='nav2_controller',
-        executable='controller_server',
-        name='controller_server',
-        output='screen',
-        parameters=[controller_yaml_file],
-        remappings=[('/cmd_vel', cmd_vel_topic)])
-    
-    planner_node = Node(
-        package='nav2_planner',
-        executable='planner_server',
-        name='planner_server',
-        output='screen',
-        parameters=[planner_yaml_file])
+    navigation_nodes = GroupAction([
+        Node(
+            package='nav2_controller',
+            executable='controller_server',
+            name='controller_server',
+            output='screen',
+            parameters=[controller_yaml_file],
+            remappings=[('/cmd_vel', cmd_vel_topic)],
+            respawn=True,
+            respawn_delay=2),
+        
+        Node(
+            package='nav2_planner',
+            executable='planner_server',
+            name='planner_server',
+            output='screen',
+            parameters=[planner_yaml_file],
+            respawn=True,
+            respawn_delay=2),
 
-    recovery_node = Node(
-        package='nav2_behaviors',
-        executable='behavior_server',
-        name='recoveries_server',
-        parameters=[recovery_yaml_file],
-        output='screen')
+        Node(
+            package='nav2_behaviors',
+            executable='behavior_server',
+            name='recoveries_server',
+            parameters=[recovery_yaml_file],
+            output='screen',
+            respawn=True,
+            respawn_delay=2),
 
-    bt_navigator_node = Node(
-        package='nav2_bt_navigator',
-        executable='bt_navigator',
-        name='bt_navigator',
-        output='screen',
-        parameters=[bt_navigator_yaml_file])
+        Node(
+            package='nav2_bt_navigator',
+            executable='bt_navigator',
+            name='bt_navigator',
+            output='screen',
+            parameters=[bt_navigator_yaml_file],
+            respawn=True,
+            respawn_delay=2),
 
+        # Node(
+        #     package='nav2_map_server',
+        #     executable='map_server',
+        #     name='filter_mask_server',
+        #     output='screen',
+        #     emulate_tty=True,
+        #     parameters=[filters_yaml],
+        #     respawn=True,
+        #     respawn_delay=2),
 
-    filter_mask_server = Node(
-        package='nav2_map_server',
-        executable='map_server',
-        name='filter_mask_server',
-        output='screen',
-        emulate_tty=True,
-        parameters=[filters_yaml]),
+        # Node(
+        #     package='nav2_map_server',
+        #     executable='costmap_filter_info_server',
+        #     name='costmap_filter_info_server',
+        #     output='screen',
+        #     emulate_tty=True,
+        #     parameters=[filters_yaml],
+        #     respawn=True,
+        #     respawn_delay=2),
 
-    costmap_filter_info_server = Node(
-        package='nav2_map_server',
-        executable='costmap_filter_info_server',
-        name='costmap_filter_info_server',
-        output='screen',
-        emulate_tty=True,
-        parameters=[filters_yaml]),
-
-    lifecycle_node = Node(
-        package='nav2_lifecycle_manager',
-        executable='lifecycle_manager',
-        name='lifecycle_manager_pathplanner',
-        output='screen',
-        parameters=[{'autostart': True},
-                    {'node_names': ['planner_server',
-                                    'controller_server',
-                                    'recoveries_server',
-                                    'bt_navigator',
-                                    'filter_mask_server',
-                                    'costmap_filter_info_server']}])
+        Node(
+            package='nav2_lifecycle_manager',
+            executable='lifecycle_manager',
+            name='lifecycle_manager_pathplanner',
+            output='screen',
+            parameters=[{'autostart': True},
+                        {'node_names': ['planner_server',
+                                        'controller_server',
+                                        'recoveries_server',
+                                        'bt_navigator',
+                                        # 'filter_mask_server',
+                                        # 'costmap_filter_info_server'
+                                        ]}],
+            respawn=True,
+            respawn_delay=2)
+    ])
     
     rviz_node = Node(
         package='rviz2',
@@ -157,7 +175,9 @@ def generate_launch_description():
         name='rviz2',
         arguments=['-d', rviz_config_path],
         parameters=[{'use_sim_time': use_sim_time}],
-        output='screen')
+        output='screen',
+        respawn=True,
+        respawn_delay=2)
 
     return LaunchDescription([
         use_sim_time_arg,
@@ -165,10 +185,6 @@ def generate_launch_description():
         bt_navigator_yaml_arg,
         planner_yaml_arg,
         recovery_yaml_arg,
-        controller_node,
-        planner_node,
-        recovery_node,
-        bt_navigator_node,
-        lifecycle_node,
+        navigation_nodes,
         rviz_node
     ])

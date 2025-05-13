@@ -14,9 +14,9 @@ import time
 # Define warehouse positions - replace with real robot lab coordinates
 # These need to be measured in the real environment
 warehouse_positions = {
-    "init_position": [-1.0, -0.5, 0.0],         # [x, y, yaw]
-    "loading_position": [1.0, 0.5, 0.0],        # Near shelf
-    "shipping_position": [2.5, 2.0, 0.0]        # Destination for unloading
+    "init_position": [0.01592554960126385, -0.0010036087994216704, 0.0],            # [x, y, yaw]
+    "loading_position": [5.602146584521654, -0.19586829992020444, 0.0],         # Near shelf
+    "shipping_position": [2.4651862793680066, 1.3015561968534988, 0.0]   
 }
 
 def main():
